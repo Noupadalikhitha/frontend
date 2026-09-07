@@ -90,7 +90,10 @@ export default function Sales() {
   })
 
   const createPaymentMutation = useMutation({
-    mutationFn: (data) => salesAPI.createPayment(data),
+    mutationFn: async (data) => {
+      const paymentResponse = await salesAPI.createPayment(data)
+      return salesAPI.confirmLocalPayment(paymentResponse.data.id)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['orders'])
       setShowPaymentModal(null)

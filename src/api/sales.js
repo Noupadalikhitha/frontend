@@ -12,6 +12,7 @@ export const salesAPI = {
   getWeeklyReport: (weekStart) => api.get('/sales/orders/reports/weekly', { params: { week_start: weekStart } }),
   getMonthlyReport: (year, month) => api.get('/sales/orders/reports/monthly', { params: { year, month } }),
   createPayment: (data) => api.post('/sales/payments', data),
+  confirmLocalPayment: (paymentId) => api.post(`/sales/payments/${paymentId}/mock-confirm`),
   getOrderPayments: (orderId) => api.get(`/sales/orders/${orderId}/payments`),
   
   // AI Features
