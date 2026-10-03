@@ -1,24 +1,24 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { aiAPI } from '../api/ai'
-import { Send, RefreshCw, Database } from 'lucide-react'
+import { Send, RefreshCw, Sparkles } from 'lucide-react'
 
 export default function AIChat() {
   const [query, setQuery] = useState('')
   const [messages, setMessages] = useState([])
 
   const queryMutation = useMutation({
-    mutationFn: (q) => aiAPI.query(q),
+    mutationFn: (q) => aiAPI.agent(q),
     onSuccess: (res) => {
       const data = res.data
+      const answer = data.answer || data.summary || data.detail || 'The agent returned no answer.'
       setMessages((prev) => [
         ...prev,
         { type: 'user', content: query },
         {
           type: 'assistant',
-          content: data.summary || 'Here are the results.',
-          sql: data.sql_query,
-          results: data.results || [],
+          content: answer,
+          tools: data.tools_used || [],
         },
       ])
       setQuery('')
@@ -27,7 +27,10 @@ export default function AIChat() {
       setMessages((prev) => [
         ...prev,
         { type: 'user', content: query },
-        { type: 'assistant', content: err.response?.data?.summary || 'Something went wrong.' },
+        {
+          type: 'assistant',
+          content: err.response?.data?.detail || err.response?.data?.summary || 'Something went wrong.',
+        },
       ])
       setQuery('')
     },
@@ -35,10 +38,10 @@ export default function AIChat() {
 
   const quickPrompts = [
     'Show low-stock products',
-    'Which employee worked the most last week?',
-    'What was my revenue this month?',
-    'Show expenses by type for last 30 days',
-    'Forecast sales for next 30 days',
+    'What were our sales last month?',
+    'Which products should we reorder?',
+    'What are our biggest expenses?',
+    'Why did profit decrease?',
   ]
 
   const handleSubmit = (e) => {
@@ -128,16 +131,12 @@ export default function AIChat() {
                 }`}
               >
                 <p className="whitespace-pre-wrap">{msg.content}</p>
-                {msg.sql && (
-                  <div className="mt-3 text-xs bg-white text-gray-800 rounded border border-gray-200 p-2">
-                    <div className="flex items-center gap-2 text-[11px] text-gray-600 mb-1">
-                      <Database className="w-3 h-3" />
-                      Generated SQL
-                    </div>
-                    <pre className="overflow-auto">{msg.sql}</pre>
+                {msg.tools && msg.tools.length > 0 && (
+                  <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
+                    <Sparkles className="w-3 h-3" />
+                    Analyzed {msg.tools.join(' and ')} data
                   </div>
                 )}
-                {msg.results && msg.results.length > 0 && renderResultsTable(msg.results)}
               </div>
             </div>
           ))}
